@@ -1,0 +1,370 @@
+<html>
+<head>
+<title>MainActivity.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6897bb;}
+.s3 { color: #808080;}
+.s4 { color: #6a8759;}
+.s5 { color: #629755; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+MainActivity.java</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com.example.locationtracking</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">android.Manifest</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.content.pm.PackageManager</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.graphics.Point</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.hardware.Sensor</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.hardware.SensorEvent</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.hardware.SensorEventListener</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.location.Location</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.location.LocationListener</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.Bundle</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.Handler</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.Message</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.os.SystemClock</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.provider.Settings</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.util.Log</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.animation.Interpolator</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.view.animation.LinearInterpolator</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.widget.Button</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">android.widget.TextView</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">androidx.annotation.NonNull</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.annotation.Nullable</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.core.app.ActivityCompat</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.core.content.ContextCompat</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">androidx.fragment.app.FragmentActivity</span><span class="s0">;</span>
+
+<span class="s0">import </span><span class="s1">com.google.android.gms.common.ConnectionResult</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.common.api.GoogleApiClient</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.common.api.PendingResult</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.common.api.Status</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.location.LocationRequest</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.location.LocationServices</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.CameraUpdateFactory</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.GoogleMap</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.OnMapReadyCallback</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.Projection</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.SupportMapFragment</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.model.LatLng</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.model.Marker</span><span class="s0">;</span>
+<span class="s0">import </span><span class="s1">com.google.android.gms.maps.model.MarkerOptions</span><span class="s0">;</span>
+
+<span class="s0">public class </span><span class="s1">MainActivity </span><span class="s0">extends </span><span class="s1">FragmentActivity </span><span class="s0">implements </span><span class="s1">LocationListener</span><span class="s0">,</span>
+        <span class="s1">OnMapReadyCallback</span><span class="s0">, </span><span class="s1">GoogleApiClient</span>
+                <span class="s1">.ConnectionCallbacks</span><span class="s0">, </span><span class="s1">GoogleApiClient.OnConnectionFailedListener {</span>
+
+    <span class="s0">private </span><span class="s1">GoogleMap mMap</span><span class="s0">;</span>
+    <span class="s0">private final int </span><span class="s1">MY_LOCATION_REQUEST_CODE = </span><span class="s2">100</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">Handler handler</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">Marker m</span><span class="s0">;</span>
+<span class="s3">//    private GoogleApiClient googleApiClient;</span>
+
+    <span class="s0">public final static int </span><span class="s1">SENDING = </span><span class="s2">1</span><span class="s0">;</span>
+    <span class="s0">public final static int </span><span class="s1">CONNECTING = </span><span class="s2">2</span><span class="s0">;</span>
+    <span class="s0">public final static int </span><span class="s1">ERROR = </span><span class="s2">3</span><span class="s0">;</span>
+    <span class="s0">public final static int </span><span class="s1">SENT = </span><span class="s2">4</span><span class="s0">;</span>
+    <span class="s0">public final static int </span><span class="s1">SHUTDOWN = </span><span class="s2">5</span><span class="s0">;</span>
+
+    <span class="s0">private static final </span><span class="s1">String TAG = </span><span class="s4">&quot;LocationActivity&quot;</span><span class="s0">;</span>
+    <span class="s0">private static final long </span><span class="s1">INTERVAL = </span><span class="s2">1000 </span><span class="s1">* </span><span class="s2">10</span><span class="s0">;</span>
+    <span class="s0">private static final long </span><span class="s1">FASTEST_INTERVAL = </span><span class="s2">1000 </span><span class="s1">* </span><span class="s2">5</span><span class="s0">;</span>
+    <span class="s1">Button btnFusedLocation</span><span class="s0">;</span>
+    <span class="s1">TextView tvLocation</span><span class="s0">;</span>
+    <span class="s1">LocationRequest mLocationRequest</span><span class="s0">;</span>
+    <span class="s1">GoogleApiClient mGoogleApiClient</span><span class="s0">;</span>
+    <span class="s1">Location mCurrentLocation</span><span class="s0">;</span>
+    <span class="s1">String mLastUpdateTime</span><span class="s0">;</span>
+    <span class="s0">private </span><span class="s1">Location previousLocation</span><span class="s0">;</span>
+
+    <span class="s0">protected void </span><span class="s1">createLocationRequest() {</span>
+        <span class="s1">mLocationRequest = </span><span class="s0">new </span><span class="s1">LocationRequest()</span><span class="s0">;</span>
+        <span class="s1">mLocationRequest.setInterval(INTERVAL)</span><span class="s0">;</span>
+        <span class="s1">mLocationRequest.setFastestInterval(FASTEST_INTERVAL)</span><span class="s0">;</span>
+        <span class="s1">mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onCreate(Bundle savedInstanceState) {</span>
+        <span class="s0">super</span><span class="s1">.onCreate(savedInstanceState)</span><span class="s0">;</span>
+        <span class="s1">setContentView(R.layout.activity_main)</span><span class="s0">;</span>
+
+        <span class="s1">createLocationRequest()</span><span class="s0">;</span>
+        <span class="s1">mGoogleApiClient = </span><span class="s0">new </span><span class="s1">GoogleApiClient.Builder(</span><span class="s0">this</span><span class="s1">)</span>
+                <span class="s1">.addApi(LocationServices.API)</span>
+                <span class="s1">.addConnectionCallbacks(</span><span class="s0">this</span><span class="s1">)</span>
+                <span class="s1">.addOnConnectionFailedListener(</span><span class="s0">this</span><span class="s1">)</span>
+                <span class="s1">.build()</span><span class="s0">;</span>
+
+        <span class="s3">// Obtain the SupportMapFragment and get notified when the map is ready to be used.</span>
+        <span class="s1">SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()</span>
+                <span class="s1">.findFragmentById(R.id.map)</span><span class="s0">;</span>
+        <span class="s1">mapFragment.getMapAsync(</span><span class="s0">this</span><span class="s1">)</span><span class="s0">;</span>
+
+        <span class="s1">handler = </span><span class="s0">new </span><span class="s1">Handler() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">handleMessage(Message msg) {</span>
+                <span class="s0">switch </span><span class="s1">(msg.what) {</span>
+
+                    <span class="s0">case </span><span class="s1">SENDING:</span>
+
+                        <span class="s0">break;</span>
+
+                <span class="s1">}</span>
+
+            <span class="s1">}</span>
+        <span class="s1">}</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+
+    <span class="s5">/**</span>
+     <span class="s5">* Manipulates the map once available.</span>
+     <span class="s5">* This callback is triggered when the map is ready to be used.</span>
+     <span class="s5">* This is where we can add markers or lines, add listeners or move the camera. In this case,</span>
+     <span class="s5">* we just add a marker near Sydney, Australia.</span>
+     <span class="s5">* If Google Play services is not installed on the device, the user will be prompted to install</span>
+     <span class="s5">* it inside the SupportMapFragment. This method will only be triggered once the user has</span>
+     <span class="s5">* installed Google Play services and returned to the app.</span>
+     <span class="s5">*/</span>
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onMapReady(GoogleMap googleMap) {</span>
+        <span class="s1">mMap = googleMap</span><span class="s0">;</span>
+
+        <span class="s3">// Add a marker in Thrissur and move the camera</span>
+       <span class="s1">LatLng thrissur = </span><span class="s0">new </span><span class="s1">LatLng(</span><span class="s2">10.5276</span><span class="s0">, </span><span class="s2">76.2144</span><span class="s1">)</span><span class="s0">;</span>
+
+        <span class="s1">m = mMap.addMarker(</span><span class="s0">new </span><span class="s1">MarkerOptions().position(thrissur).title(</span><span class="s4">&quot;Marker in &quot; </span><span class="s1">+</span>
+                <span class="s1">thrissur))</span><span class="s0">;</span>
+        <span class="s1">mMap.moveCamera(CameraUpdateFactory.newLatLng(thrissur))</span><span class="s0">;</span>
+
+
+
+        <span class="s0">if </span><span class="s1">(ContextCompat.checkSelfPermission(</span><span class="s0">this, </span><span class="s1">Manifest.permission.ACCESS_FINE_LOCATION)</span>
+                <span class="s1">== PackageManager.PERMISSION_GRANTED) {</span>
+            <span class="s1">mMap.setMyLocationEnabled(</span><span class="s0">true</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+            <span class="s3">// Show rationale and request permission.</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+
+    <span class="s0">public void </span><span class="s1">rotateMarker(</span><span class="s0">final </span><span class="s1">Marker marker</span><span class="s0">, final float </span><span class="s1">toRotation</span><span class="s0">, final float </span><span class="s1">st) {</span>
+        <span class="s0">final </span><span class="s1">Handler handler = </span><span class="s0">new </span><span class="s1">Handler()</span><span class="s0">;</span>
+        <span class="s0">final long </span><span class="s1">start = SystemClock.uptimeMillis()</span><span class="s0">;</span>
+        <span class="s0">final float </span><span class="s1">startRotation = st</span><span class="s0">;</span>
+        <span class="s0">final long </span><span class="s1">duration = </span><span class="s2">1555</span><span class="s0">;</span>
+
+        <span class="s0">final </span><span class="s1">Interpolator interpolator = </span><span class="s0">new </span><span class="s1">LinearInterpolator()</span><span class="s0">;</span>
+
+        <span class="s1">handler.post(</span><span class="s0">new </span><span class="s1">Runnable() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">run() {</span>
+                <span class="s0">long </span><span class="s1">elapsed = SystemClock.uptimeMillis() - start</span><span class="s0">;</span>
+                <span class="s0">float </span><span class="s1">t = interpolator.getInterpolation((</span><span class="s0">float</span><span class="s1">) elapsed / duration)</span><span class="s0">;</span>
+
+                <span class="s0">float </span><span class="s1">rot = t * toRotation + (</span><span class="s2">1 </span><span class="s1">- t) * startRotation</span><span class="s0">;</span>
+
+                <span class="s1">marker.setRotation(-rot &gt; </span><span class="s2">180 </span><span class="s1">? rot / </span><span class="s2">2 </span><span class="s1">: rot)</span><span class="s0">;</span>
+                <span class="s0">if </span><span class="s1">(t &lt; </span><span class="s2">1.0</span><span class="s1">) {</span>
+                    <span class="s3">// Post again 16ms later.</span>
+                    <span class="s1">handler.postDelayed(</span><span class="s0">this, </span><span class="s2">16</span><span class="s1">)</span><span class="s0">;</span>
+                <span class="s1">}</span>
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+
+    <span class="s0">public void </span><span class="s1">animateMarker(</span><span class="s0">final </span><span class="s1">LatLng toPosition</span><span class="s0">, final boolean </span><span class="s1">hideMarke) {</span>
+        <span class="s0">final </span><span class="s1">Handler handler = </span><span class="s0">new </span><span class="s1">Handler()</span><span class="s0">;</span>
+        <span class="s0">final long </span><span class="s1">start = SystemClock.uptimeMillis()</span><span class="s0">;</span>
+        <span class="s1">Projection proj = mMap.getProjection()</span><span class="s0">;</span>
+        <span class="s1">Point startPoint = proj.toScreenLocation(m.getPosition())</span><span class="s0">;</span>
+        <span class="s0">final </span><span class="s1">LatLng startLatLng = proj.fromScreenLocation(startPoint)</span><span class="s0">;</span>
+        <span class="s0">final long </span><span class="s1">duration = </span><span class="s2">5000</span><span class="s0">;</span>
+
+        <span class="s0">final </span><span class="s1">Interpolator interpolator = </span><span class="s0">new </span><span class="s1">LinearInterpolator()</span><span class="s0">;</span>
+
+        <span class="s1">handler.post(</span><span class="s0">new </span><span class="s1">Runnable() {</span>
+            <span class="s1">@Override</span>
+            <span class="s0">public void </span><span class="s1">run() {</span>
+                <span class="s0">long </span><span class="s1">elapsed = SystemClock.uptimeMillis() - start</span><span class="s0">;</span>
+                <span class="s0">float </span><span class="s1">t = interpolator.getInterpolation((</span><span class="s0">float</span><span class="s1">) elapsed</span>
+                        <span class="s1">/ duration)</span><span class="s0">;</span>
+                <span class="s0">double </span><span class="s1">lng = t * toPosition.longitude + (</span><span class="s2">1 </span><span class="s1">- t)</span>
+                        <span class="s1">* startLatLng.longitude</span><span class="s0">;</span>
+                <span class="s0">double </span><span class="s1">lat = t * toPosition.latitude + (</span><span class="s2">1 </span><span class="s1">- t)</span>
+                        <span class="s1">* startLatLng.latitude</span><span class="s0">;</span>
+                <span class="s1">m.setPosition(</span><span class="s0">new </span><span class="s1">LatLng(lat</span><span class="s0">, </span><span class="s1">lng))</span><span class="s0">;</span>
+
+                <span class="s0">if </span><span class="s1">(t &lt; </span><span class="s2">1.0</span><span class="s1">) {</span>
+                    <span class="s3">// Post again 16ms later.</span>
+                    <span class="s1">handler.postDelayed(</span><span class="s0">this, </span><span class="s2">16</span><span class="s1">)</span><span class="s0">;</span>
+                <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                    <span class="s0">if </span><span class="s1">(hideMarke) {</span>
+                        <span class="s1">m.setVisible(</span><span class="s0">false</span><span class="s1">)</span><span class="s0">;</span>
+                    <span class="s1">} </span><span class="s0">else </span><span class="s1">{</span>
+                        <span class="s1">m.setVisible(</span><span class="s0">true</span><span class="s1">)</span><span class="s0">;</span>
+                    <span class="s1">}</span>
+                <span class="s1">}</span>
+
+
+              <span class="s3">/*  Marker m1 = mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)) 
+                        .title(&quot;pothole&quot;) 
+                        .anchor(0.5f,0.5f)); */</span>
+
+            <span class="s1">}</span>
+        <span class="s1">})</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">private double </span><span class="s1">bearingBetweenLocations(LatLng latLng1</span><span class="s0">, </span><span class="s1">LatLng latLng2) {</span>
+
+        <span class="s0">double </span><span class="s1">PI = </span><span class="s2">3.14159</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">lat1 = latLng1.latitude * PI / </span><span class="s2">180</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">long1 = latLng1.longitude * PI / </span><span class="s2">180</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">lat2 = latLng2.latitude * PI / </span><span class="s2">180</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">long2 = latLng2.longitude * PI / </span><span class="s2">180</span><span class="s0">;</span>
+
+        <span class="s0">double </span><span class="s1">dLon = (long2 - long1)</span><span class="s0">;</span>
+
+        <span class="s0">double </span><span class="s1">y = Math.sin(dLon) * Math.cos(lat2)</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)</span>
+                <span class="s1">* Math.cos(lat2) * Math.cos(dLon)</span><span class="s0">;</span>
+
+        <span class="s0">double </span><span class="s1">brng = Math.atan2(y</span><span class="s0">, </span><span class="s1">x)</span><span class="s0">;</span>
+
+        <span class="s1">brng = Math.toDegrees(brng)</span><span class="s0">;</span>
+        <span class="s1">brng = (brng + </span><span class="s2">360</span><span class="s1">) % </span><span class="s2">360</span><span class="s0">;</span>
+
+        <span class="s0">return </span><span class="s1">brng</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+
+   <span class="s3">/* @Override 
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] 
+            grantResults) { 
+        if (requestCode == MY_LOCATION_REQUEST_CODE) { 
+            if (permissions.length == 1 &amp;&amp; 
+                    permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &amp;&amp; 
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) { 
+                mMap.setMyLocationEnabled(true); 
+            } else { 
+                // Permission was denied. Display an error message. 
+            } 
+        } 
+    }*/</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onConnected(@Nullable Bundle bundle) {</span>
+
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;onConnected - isConnected ...............: &quot; </span><span class="s1">+ mGoogleApiClient.isConnected())</span><span class="s0">;</span>
+        <span class="s1">startLocationUpdates()</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onStart() {</span>
+        <span class="s0">super</span><span class="s1">.onStart()</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;onStart fired ..............&quot;</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">mGoogleApiClient.connect()</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onStop() {</span>
+        <span class="s0">super</span><span class="s1">.onStop()</span><span class="s0">;</span>
+
+        <span class="s1">mGoogleApiClient.disconnect()</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;isConnected ...............: &quot; </span><span class="s1">+ mGoogleApiClient.isConnected())</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onConnectionSuspended(</span><span class="s0">int </span><span class="s1">i) {</span>
+
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onConnectionFailed(@NonNull ConnectionResult connectionResult) {</span>
+
+    <span class="s1">}</span>
+
+    <span class="s0">protected void </span><span class="s1">startLocationUpdates() {</span>
+        <span class="s0">if </span><span class="s1">(ActivityCompat.checkSelfPermission(</span><span class="s0">this, </span><span class="s1">Manifest.permission.ACCESS_FINE_LOCATION) !=</span>
+                <span class="s1">PackageManager.PERMISSION_GRANTED &amp;&amp; ActivityCompat.checkSelfPermission(</span><span class="s0">this,</span>
+                <span class="s1">Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {</span>
+            <span class="s3">// TODO: Consider calling</span>
+            <span class="s3">//    ActivityCompat#requestPermissions</span>
+            <span class="s3">// here to request the missing permissions, and then overriding</span>
+            <span class="s3">//   public void onRequestPermissionsResult(int requestCode, String[] permissions,</span>
+            <span class="s3">//                                          int[] grantResults)</span>
+            <span class="s3">// to handle the case where the user grants the permission. See the documentation</span>
+            <span class="s3">// for ActivityCompat#requestPermissions for more details.</span>
+            <span class="s0">return;</span>
+        <span class="s1">}</span>
+        <span class="s1">PendingResult&lt;Status&gt; pendingResult = LocationServices.FusedLocationApi</span>
+                <span class="s1">.requestLocationUpdates(mGoogleApiClient</span><span class="s0">, </span><span class="s1">mLocationRequest</span><span class="s0">, this</span><span class="s1">)</span><span class="s0">;</span>
+
+
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;Location update started ..............: &quot;</span><span class="s1">)</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">LatLng previouslatLng</span><span class="s0">;</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onLocationChanged(Location location) {</span>
+        <span class="s1">previouslatLng = </span><span class="s0">new </span><span class="s1">LatLng(location.getLatitude()</span><span class="s0">, </span><span class="s1">location.getLongitude())</span><span class="s0">;</span>
+
+        <span class="s0">double </span><span class="s1">rota = </span><span class="s2">0.0</span><span class="s0">;</span>
+        <span class="s0">double </span><span class="s1">startrota = </span><span class="s2">0.0</span><span class="s0">;</span>
+        <span class="s0">if </span><span class="s1">(previousLocation != </span><span class="s0">null</span><span class="s1">) {</span>
+
+            <span class="s1">rota = bearingBetweenLocations(previouslatLng</span><span class="s0">, new </span><span class="s1">LatLng(location.getLatitude</span>
+                    <span class="s1">()</span><span class="s0">, </span><span class="s1">location.getLongitude()))</span><span class="s0">;</span>
+        <span class="s1">}</span>
+
+
+        <span class="s1">rotateMarker(m</span><span class="s0">, </span><span class="s1">(</span><span class="s0">float</span><span class="s1">) rota</span><span class="s0">, </span><span class="s1">(</span><span class="s0">float</span><span class="s1">) startrota)</span><span class="s0">;</span>
+
+
+        <span class="s1">previousLocation = location</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;Firing onLocationChanged..........................&quot;</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;lat :&quot; </span><span class="s1">+ location.getLatitude() + </span><span class="s4">&quot;long :&quot; </span><span class="s1">+ location.getLongitude())</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;bearing :&quot; </span><span class="s1">+ location.getBearing())</span><span class="s0">;</span>
+
+        <span class="s1">animateMarker(</span><span class="s0">new </span><span class="s1">LatLng(location.getLatitude()</span><span class="s0">, </span><span class="s1">location.getLongitude())</span><span class="s0">, false</span><span class="s1">)</span><span class="s0">;</span>
+<span class="s3">//        new ServerConnAsync(handler, MapsActivity.this,location).execute();</span>
+
+
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">protected void </span><span class="s1">onPause() {</span>
+        <span class="s0">super</span><span class="s1">.onPause()</span><span class="s0">;</span>
+        <span class="s1">stopLocationUpdates()</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s0">protected void </span><span class="s1">stopLocationUpdates() {</span>
+        <span class="s1">LocationServices.FusedLocationApi.removeLocationUpdates(</span>
+                <span class="s1">mGoogleApiClient</span><span class="s0">, this</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;Location update stopped .......................&quot;</span><span class="s1">)</span><span class="s0">;</span>
+    <span class="s1">}</span>
+
+    <span class="s1">@Override</span>
+    <span class="s0">public void </span><span class="s1">onResume() {</span>
+        <span class="s0">super</span><span class="s1">.onResume()</span><span class="s0">;</span>
+        <span class="s0">if </span><span class="s1">(mGoogleApiClient.isConnected()) {</span>
+            <span class="s1">startLocationUpdates()</span><span class="s0">;</span>
+            <span class="s1">Log.d(TAG</span><span class="s0">, </span><span class="s4">&quot;Location update resumed .....................&quot;</span><span class="s1">)</span><span class="s0">;</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+    <span class="s3">// Marker m1 = mMap.addMarker(new MarkerOptions()</span>
+   <span class="s3">// .)</span>
+<span class="s1">}</span></pre>
+</body>
+</html>
